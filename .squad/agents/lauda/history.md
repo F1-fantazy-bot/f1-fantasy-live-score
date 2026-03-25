@@ -9,3 +9,31 @@
 ## Learnings
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
+
+### 2026-03-25 — WI-9 & WI-10: Docker + CI/CD Infrastructure
+
+**What was done:**
+
+- Created `Dockerfile` — exact clone of f1-fantasy-scraper pattern (ghcr.io/puppeteer/puppeteer:latest, root→install→copy→pptruser→chrome→CMD)
+- Created `.dockerignore` — excludes node_modules, .git, .github, .squad, .env, temp, etc.
+- Created `.github/workflows/docker-build-push.yml` — builds and pushes to f1fantasyacr.azurecr.io/f1-fantasy-live-score:latest on push to main, using OIDC Azure login + Docker Buildx with GHA caching
+- Created `.github/workflows/commit_to_main_telegram-notifier.yml` — Telegram alert on push to main
+- Created `.github/workflows/new_pr_telegram_notifier.yml` — Telegram alert on new PR to main
+
+**Key facts:**
+
+- ACR registry: f1fantasyacr.azurecr.io
+- Image name: f1-fantasy-live-score
+- OIDC secrets needed: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+- Telegram secrets needed: TELEGRAM_TO, TELEGRAM_TOKEN
+- Existing squad workflow files in .github/workflows/ were left untouched
+
+### 2026-03-25 — Team Coordination: Prost Source Code Completed
+- Prost completed WI-1 through WI-8 (all source code: 15 files including config, services, main loop)
+- Puppeteer scraper service implements ADR-011 (new browser per cycle) and ADR-004 (30s polling with concurrency guard)
+- Extraction functions ported from temp/jsFunction.md and integrated into pollingLoop
+- Blob upload implements ADR-002 (no dedup, always overwrite f1-live-score-latest.json)
+- Telegram service implements ADR-007 ("LIVE-SCORE:" prefix) and ADR-006 (5+ failure escalation)
+- All code passes ESLint and Prettier checks; Husky pre-commit hooks active
+- Integration point: Source code ready to be containerized by Dockerfile
+- Next phase: Docker image built; GitHub Actions workflows trigger on push/PR; Hunt begins testing
