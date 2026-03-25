@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.squad/
+.copilot/
+.github/
+temp/
+package-lock.json
