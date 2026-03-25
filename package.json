@@ -1,0 +1,28 @@
+{
+  "name": "f1-fantasy-live-score",
+  "version": "1.0.0",
+  "description": "Live data scraping service for F1 Fantasy. Scrapes real-time driver and constructor scoring data every 30 seconds.",
+  "main": "index.js",
+  "scripts": {
+    "prepare": "husky",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "start": "node index.js",
+    "format": "prettier --write ."
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@azure/storage-blob": "^12.27.0",
+    "dotenv": "^16.5.0",
+    "node-telegram-bot-api": "^0.66.0",
+    "puppeteer": "^22.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.3",
+    "eslint-plugin-prettier": "^5.4.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.5.3"
+  }
+}
