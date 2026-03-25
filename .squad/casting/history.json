@@ -1,0 +1,16 @@
+{
+  "assignments": [
+    {
+      "assignment_id": "f1-live-score-001",
+      "universe": "F1 Legends",
+      "created_at": "2026-03-25T11:49:00Z",
+      "agents": [
+        { "name": "Senna", "role": "Lead/PM" },
+        { "name": "Prost", "role": "Backend Dev" },
+        { "name": "Lauda", "role": "DevOps/Infra" },
+        { "name": "Hunt", "role": "Tester" }
+      ],
+      "context": "F1 Fantasy live score extraction service — Puppeteer, Node.js, Azure, Docker"
+    }
+  ]
+}

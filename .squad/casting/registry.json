@@ -1,0 +1,37 @@
+{
+  "casting_version": "1.0",
+  "entries": [
+    {
+      "persistent_name": "Senna",
+      "role": "Lead/PM",
+      "universe": "F1 Legends",
+      "created_at": "2026-03-25T11:49:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    {
+      "persistent_name": "Prost",
+      "role": "Backend Dev",
+      "universe": "F1 Legends",
+      "created_at": "2026-03-25T11:49:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    {
+      "persistent_name": "Lauda",
+      "role": "DevOps/Infra",
+      "universe": "F1 Legends",
+      "created_at": "2026-03-25T11:49:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    {
+      "persistent_name": "Hunt",
+      "role": "Tester",
+      "universe": "F1 Legends",
+      "created_at": "2026-03-25T11:49:00Z",
+      "legacy_named": false,
+      "status": "active"
+    }
+  ]
+}

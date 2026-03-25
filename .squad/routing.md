@@ -6,12 +6,15 @@ How to decide who handles what.
 
 | Work Type | Route To | Examples |
 |-----------|----------|----------|
-| {domain 1} | {Name} | {example tasks} |
-| {domain 2} | {Name} | {example tasks} |
-| {domain 3} | {Name} | {example tasks} |
-| Code review | {Name} | Review PRs, check quality, suggest improvements |
-| Testing | {Name} | Write tests, find edge cases, verify fixes |
-| Scope & priorities | {Name} | What to build next, trade-offs, decisions |
+| Puppeteer / scraping | Prost | Browser automation, page scraping, data extraction |
+| Node.js service logic | Prost | Polling loop, data transformation, Azure Storage integration |
+| Docker / containers | Lauda | Dockerfile, image builds, container config |
+| Azure infra / deployment | Lauda | Hosting, CI/CD, env vars, secrets, scaling |
+| Testing | Hunt | Unit tests, integration tests, edge cases, reliability |
+| Code review | Senna | Review PRs, check quality, suggest improvements |
+| Architecture / design | Senna | Service structure, data flow, component boundaries |
+| Scope & priorities | Senna | What to build next, trade-offs, decisions |
+| Issue triage | Senna | Analyze issues, assign labels, set priority |
 | Session logging | Scribe | Automatic — never needs routing |
 
 ## Issue Routing
