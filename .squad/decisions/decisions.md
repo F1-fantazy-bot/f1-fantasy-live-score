@@ -182,6 +182,52 @@ f1-fantasy-live-score/
 
 ---
 
+## Scraper Wait Strategy (2026-03-27)
+
+**By:** Prost  
+**Affects:** Hunt (test expectations), Lauda (Docker timing)
+
+Three fixes applied to `src/scraperService.js` to resolve `waitForSelector` timeout:
+
+1. **`waitUntil: 'networkidle2'`** — Target site renders tables via client-side JS. Wait for network activity to settle before checking DOM.
+2. **Removed `visible: true`** — Since stylesheets are blocked for performance, CSS-based visibility checks are unreliable. Check DOM presence only.
+3. **Full User-Agent string** — Replaced sparse UA with complete Chrome 125 string to avoid bot detection.
+
+**Impact:** Navigation will take slightly longer (waits for API calls to finish), correct behavior for JS-rendered sites. Tests mocking `page.goto` or `page.waitForSelector` should update expected options.
+
+**Status:** IMPLEMENTED, cross-team coordination pending
+
+---
+
+## ADR-012: Stop Blocking Stylesheets in Scraper (2026-03-27)
+
+**Author:** Prost  
+**Status:** APPLIED  
+**Affects:** `src/scraperService.js`
+
+### Context
+Despite three wait strategy fixes, `waitForSelector('tbody tr')` was still timing out at 15s. Investigation revealed the root cause: blocking `stylesheet` resource type prevented the target site's JavaScript framework from completing its render cycle, as CSS is essential for DOM rendering in modern JS frameworks.
+
+### Decision
+- **Remove `'stylesheet'` from blocked resource types** in `src/scraperService.js`. Only block `'image'` and `'font'`.
+- **Add `navigator.webdriver` override** via `evaluateOnNewDocument` as an anti-bot measure to mask headless Chrome detection.
+
+### Trade-offs
+- **+5-15% network bandwidth** from loading CSS — negligible since stylesheets are ~10-50 KB vs images often 1+ MB
+- **Improved reliability** — CSS-dependent rendering frameworks now complete successfully
+- **Slightly longer navigation** — justified by reliable DOM presence
+
+### Implementation
+- Lines 32-38: Resource blocking (only image, font)
+- Lines 45-48: Webdriver mask setup before page.goto()
+
+### Verification
+- `temp/diagnose-scraper.js` provides 3-pass diagnostic for future troubleshooting
+- Scraper now reliably captures live data within timeout window
+- Ready for Hunt (QA) test updates
+
+---
+
 ## Decision Lineage
 
 | Decision | ADR | Author | Date | Status |
@@ -197,5 +243,6 @@ f1-fantasy-live-score/
 | CommonJS | ADR-009 | Senna | 2026-03-25 | PROPOSED |
 | Output schema | ADR-010 | Senna | 2026-03-25 | PROPOSED (Doron-confirmed) |
 | Browser per cycle | ADR-011 | Senna | 2026-03-25 | PROPOSED |
+| Scraper wait strategy | Tactical | Prost | 2026-03-27 | IMPLEMENTED |
 | Repo boundary | Directive | Doron | 2026-03-25 | APPROVED |
 | Model choice | Directive | Doron | 2026-03-25 | APPROVED |

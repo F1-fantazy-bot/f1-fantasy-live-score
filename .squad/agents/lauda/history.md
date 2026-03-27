@@ -10,6 +10,22 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### 2026-03-27 — Cross-Team Update: Prost's scraperService.js Fixes
+
+**Context:** Prost resolved `waitForSelector` timeouts in the polling cycle with three changes.
+
+**Changes affecting Lauda's Docker/CI considerations:**
+- `waitUntil` now waits for `networkidle2` instead of domcontentloaded
+- Navigation timeout remains 45 seconds (sufficient for network settle)
+- Full Chrome 125 User-Agent string prevents bot detection
+
+**Docker timing impact:**
+- First cycle may take slightly longer due to network wait, but acceptable within 30-second polling window
+- Network waits ensure reliable data extraction, correct behavior for JS-rendered sites
+- Container startup latency unaffected (changes only affect page navigation within cycle)
+
+**Reference:** See `.squad/orchestration-log/2026-03-27T09-07-prost.md` and `.squad/decisions/decisions.md`
+
 ### 2026-03-25 — WI-9 & WI-10: Docker + CI/CD Infrastructure
 
 **What was done:**

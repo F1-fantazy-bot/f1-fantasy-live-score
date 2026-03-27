@@ -1,0 +1,24 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "docker-debug-start",
+      "type": "shell",
+      "command": "docker build -t f1-live-score . && docker run --rm -p 9229:9229 --env-file .env --name f1-live-score-debug f1-live-score node --inspect-brk=0.0.0.0:9229 index.js",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^Debugger listening",
+          "endsPattern": "^Debugger listening"
+        }
+      }
+    },
+    {
+      "label": "docker-debug-stop",
+      "type": "shell",
+      "command": "docker rm -f f1-live-score-debug 2>/dev/null || true"
+    }
+  ]
+}

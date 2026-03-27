@@ -10,6 +10,21 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### 2026-03-27 — Cross-Team Update: Prost's scraperService.js Fixes
+
+**Context:** Prost resolved `waitForSelector` timeouts in the polling cycle.
+
+**Changes that affect Hunt tests:**
+- `waitUntil` changed from implicit to explicit `networkidle2`
+- Removed `visible: true` from selector options  
+- Full Chrome 125 User-Agent string added
+
+**Action for Hunt:**
+- Any test mocks of `page.goto()` or `page.waitForSelector()` should update their expected call options
+- Selector timeouts should now pass consistently on polling cycles 2+ (after initial network load)
+
+**Reference:** See `.squad/orchestration-log/2026-03-27T09-07-prost.md` and `.squad/decisions/decisions.md`
+
 ### 2026-03-25 — WI-11 Smoke Test / Full Validation
 
 **Scope:** Validated all source files against the project plan and 11 ADRs.

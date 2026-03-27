@@ -29,25 +29,34 @@ async function scrapeLiveScoreData() {
   try {
     page = await browser.newPage();
 
-    // Block images, fonts, and stylesheets to reduce memory usage
+    // Block images and fonts to reduce memory (keep stylesheets — the JS
+    // framework on f1fantasytools.com needs CSS to complete rendering)
     await page.setRequestInterception(true);
     page.on('request', (r) => {
-      if (['image', 'font', 'stylesheet'].includes(r.resourceType())) r.abort();
+      if (['image', 'font'].includes(r.resourceType())) r.abort();
       else r.continue();
     });
 
     await page.setViewport({ width: 1024, height: 768 });
-    await page.setUserAgent('Mozilla/5.0 (Linux; x86_64) AppleWebKit/537.36');
+    await page.setUserAgent(
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+    );
+
+    // Mask headless Chrome's webdriver flag to avoid bot detection
+    // eslint-disable-next-line no-undef
+    await page.evaluateOnNewDocument(() => {
+      // eslint-disable-next-line no-undef
+      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    });
 
     await page.goto(config.scraper.targetUrl, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
       timeout: config.scraper.navigationTimeout,
     });
 
     // Wait for table rows to appear on the live page
     await page.waitForSelector('tbody tr', {
       timeout: config.scraper.selectorTimeout,
-      visible: true,
     });
 
     const { extractDriverData, extractConstructorData } =
