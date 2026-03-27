@@ -18,6 +18,7 @@
 | Hunt | Tester | `.squad/agents/hunt/charter.md` | 🧪 Active |
 | Scribe | Session Logger | `.squad/agents/scribe/charter.md` | 📋 Active |
 | Ralph | Work Monitor | — | 🔄 Monitor |
+| Doron | Reviewer | — | 👤 Human |
 
 ## Project Context
 

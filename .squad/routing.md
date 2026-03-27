@@ -31,9 +31,16 @@ How to decide who handles what.
 3. Members can reassign by removing their label and adding another member's label.
 4. The `squad` label is the "inbox" — untriaged issues waiting for Lead review.
 
+## Human Members
+
+| Name | Role | Workflow |
+|------|------|----------|
+| Doron | Reviewer | After agent work completes, present changes to Doron. Wait for approval before committing. |
+
 ## Rules
 
-1. **Eager by default** — spawn all agents who could usefully start work, including anticipatory downstream work.
+0. **Human gate — Doron approves before commit.** After agents finish changes, ask Doron to verify. Only commit when he confirms it works.
+1. **Eager by default**— spawn all agents who could usefully start work, including anticipatory downstream work.
 2. **Scribe always runs** after substantial work, always as `mode: "background"`. Never blocks.
 3. **Quick facts → coordinator answers directly.** Don't spawn an agent for "what port does the server run on?"
 4. **When two agents could handle it**, pick the one whose domain is the primary concern.
