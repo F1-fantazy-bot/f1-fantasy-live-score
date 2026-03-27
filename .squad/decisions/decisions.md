@@ -277,6 +277,48 @@ Never commit directly to main branch. Always use a feature branch so Doron can r
 
 ---
 
+## ADR-015: Logic App Rewrite — Delay Until → Polling (2026-03-27)
+
+**Author:** Lauda  
+**Status:** PROPOSED  
+**Affects:** `infra/scheduler/azuredeploy.json` (complete rewrite)
+
+### Context
+Original ADR-014 (Logic App ACI Scheduler) implemented delay-until-based design with long-running workflow instances waiting for session start times. This created operational complexity and fragility on failures. User preference indicated polling-based, idempotent approach.
+
+### Decision
+Complete rewrite to polling-based architecture:
+- **Weekly recurrence trigger:** Fri/Sat/Sun/Mon, every 30 minutes (48 polls/day)
+- **Stateless polling:** No long-running instances; each poll is independent
+- **Session window offsets:** Qualifying ±30/+90, Sprint ±30/+90, Race ±30/+180 min from session start time
+- **Idempotent start/stop:** Single decision per poll — if time falls in any window → start; otherwise → stop
+- **Timestamp precision:** Use `ticks()` conversion for numeric comparison (avoids string drift)
+- **Null safety:** Dual null guard on Sprint field (only exists on sprint weekends)
+
+### Key Design Choices
+1. **Trigger:** 30-minute frequency on race weekends + Monday (cost: ~192 polls/weekend vs 7 delays/week per session type)
+2. **Session windows:** Pre-buffers (-30 min) allow start preparation; post-buffers from session start: Quali +90min, Sprint +90min, Race +180min
+3. **Parallel conditions:** Three simultaneous window checks (Qualifying, Sprint, Race) converge to single `Should_Be_Running` decision
+4. **Current time capture:** Single `utcNow()` Compose action ensures all window checks use same timestamp reference
+
+### Trade-offs
+- **Cost:** 144 polls/weekend still within Logic App free tier (10,000+/month)
+- **Latency:** ±15 minutes maximum before action triggered (acceptable for ACI lifecycle)
+- **Simplicity:** Idempotent logic easier to understand/troubleshoot than long-running delays
+
+### Implementation
+- Template lines 1-250+: Complete rewrite of trigger, variables, actions, expressions
+- Parameters file: No changes (backward compatible)
+- Post-deploy RBAC: Unchanged (Contributor role on Logic App managed identity)
+
+### Rationale
+- Polling is inherently more robust than long-running workflows (no instance state to corrupt)
+- Idempotence eliminates cascading failure modes
+- User preference (Doron) for stateless approach strongly influenced decision
+- 30-minute polling window sufficient for ACI start/stop latency requirements
+
+---
+
 ## Decision Lineage
 
 | Decision | ADR | Author | Date | Status |
@@ -293,5 +335,56 @@ Never commit directly to main branch. Always use a feature branch so Doron can r
 | Output schema | ADR-010 | Senna | 2026-03-25 | PROPOSED (Doron-confirmed) |
 | Browser per cycle | ADR-011 | Senna | 2026-03-25 | PROPOSED |
 | Scraper wait strategy | Tactical | Prost | 2026-03-27 | IMPLEMENTED |
+| Persistent browser singleton | ADR-013 | Prost | 2026-03-27 | IMPLEMENTED |
 | Repo boundary | Directive | Doron | 2026-03-25 | APPROVED |
 | Model choice | Directive | Doron | 2026-03-25 | APPROVED |
+| Logic App ACI Scheduler | ADR-014 | Lauda | 2026-03-27 | SUPERSEDED by ADR-015 |
+| Logic App rewrite — polling | ADR-015 | Lauda | 2026-03-27 | PROPOSED |
+
+---
+
+## ADR-014: Logic App ACI Scheduler Architecture (2026-03-27)
+
+**Author:** Lauda  
+**Status:** SUPERSEDED by ADR-015  
+**Affects:** `infra/scheduler/azuredeploy.json`, `infra/scheduler/azuredeploy.parameters.json`
+
+### Context
+ACI container must start ~10 minutes before F1 sessions (Qualifying, Sprint, Race) and stop after session completion. Manual start/stop is error-prone and inefficient. Need automation that handles same-day overlapping sessions (e.g., Sprint 16:00 + Qualifying 20:00).
+
+### Decision
+Use Azure Logic App with daily recurrence trigger and parallel condition branches for session-specific start/stop logic.
+
+### Key Design Choices
+
+1. **Daily recurrence + date check** — Logic App fires at 00:00 UTC daily. Checks if today matches any session date from the Ergast API. If no sessions today, exits immediately (minimal cost).
+
+2. **Parallel branches for same-day sessions** — Three condition branches (Qualifying, Sprint, Race) all run after the API fetch, allowing overlapping sessions on the same day (e.g., Sprint at 16:00 and Qualifying at 20:00).
+
+3. **Managed Identity for ARM API calls** — No stored credentials. Logic App uses system-assigned identity to call the ACI start/stop REST endpoints directly.
+
+4. **Delay Until (not Delay)** — Uses absolute timestamps for start/stop timing, not relative durations. Prevents drift from workflow execution time.
+
+5. **Timing offsets:**
+   - Start ACI: 10 minutes before session (`addMinutes(..., -10)`)
+   - Stop after Qualifying: session time + 70min (60min session + 10min buffer)
+   - Stop after Sprint: session time + 55min (45min session + 10min buffer)
+   - Stop after Race: session time + 130min (120min session + 10min buffer)
+
+### Trade-offs
+- **Cost:** Daily execution + API calls negligible (Logic App free tier covers >10k/month)
+- **Complexity:** Logic App visual designer sufficient; no custom code needed
+- **Flexibility:** Easy to adjust timing offsets or add new session types
+
+### Implementation
+- ARM template (`infra/scheduler/azuredeploy.json`): Condition actions for each session type
+- Parameters file (`infra/scheduler/azuredeploy.parameters.json`): Environment-specific values
+- Ergast API endpoint: `https://api.jolpi.ca/ergast/f1/current/next.json`
+
+### Post-Deployment
+Assign Contributor role on the ACI resource to the Logic App's managed identity principal. Principal ID available in deployment output `logicAppPrincipalId`.
+
+### Rationale
+Eliminates manual intervention for container lifecycle. Ergast API provides authoritative F1 schedule. Managed Identity eliminates credential storage. Parallel branches enable complex race weekends with multiple sessions.
+
+---
