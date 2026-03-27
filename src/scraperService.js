@@ -3,6 +3,7 @@
 const puppeteer = require('puppeteer');
 const config = require('./config');
 const { getExtractionFunctions } = require('./extractionFunctions');
+const telegramService = require('./telegramService');
 
 /** @type {import('puppeteer').Browser | null} */
 let _browser = null;
@@ -80,11 +81,17 @@ async function initBrowser() {
 async function ensureBrowser() {
   if (!_browser || !_browser.isConnected()) {
     console.warn('Browser not connected — reopening');
+    telegramService
+      .sendErrorMessage('⚠️ Browser not connected — reopening')
+      .catch(() => {});
     await initBrowser();
   }
 
   if (!_page || _page.isClosed()) {
     console.warn('Page closed — creating new page');
+    telegramService
+      .sendErrorMessage('⚠️ Page closed — creating new page')
+      .catch(() => {});
     _page = await _browser.newPage();
     await configurePage(_page);
   }
