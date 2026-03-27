@@ -53,12 +53,6 @@
         "secretName": "telegram-bot-token"
       }
     },
-    "telegramLogChannelId": {
-      "value": ""
-    },
-    "telegramErrorsChannelId": {
-      "value": ""
-    },
     "pollingIntervalMs": {
       "value": "30000"
     }

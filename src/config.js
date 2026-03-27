@@ -4,8 +4,6 @@ const requiredVars = [
   'AZURE_STORAGE_CONNECTION_STRING',
   'AZURE_STORAGE_CONTAINER_NAME',
   'TELEGRAM_BOT_TOKEN',
-  'TELEGRAM_LOG_CHANNEL_ID',
-  'TELEGRAM_ERRORS_CHANNEL_ID',
 ];
 
 const missing = requiredVars.filter((key) => !process.env[key]);
@@ -23,8 +21,8 @@ const config = {
   },
   telegram: {
     botToken: process.env.TELEGRAM_BOT_TOKEN,
-    logChannelId: process.env.TELEGRAM_LOG_CHANNEL_ID,
-    errorsChannelId: process.env.TELEGRAM_ERRORS_CHANNEL_ID,
+    logChannelId: '-1002298860617',
+    errorsChannelId: '-5167373779',
   },
   polling: {
     intervalMs: parseInt(process.env.POLLING_INTERVAL_MS, 10) || 30000,

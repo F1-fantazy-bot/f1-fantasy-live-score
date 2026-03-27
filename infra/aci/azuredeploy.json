@@ -40,11 +40,7 @@
     "restartPolicy": {
       "type": "string",
       "defaultValue": "OnFailure",
-      "allowedValues": [
-        "Always",
-        "OnFailure",
-        "Never"
-      ],
+      "allowedValues": ["Always", "OnFailure", "Never"],
       "metadata": {
         "description": "Container restart policy."
       }
@@ -88,18 +84,6 @@
         "description": "Telegram bot token for sending notifications."
       }
     },
-    "telegramLogChannelId": {
-      "type": "string",
-      "metadata": {
-        "description": "Telegram channel ID for log messages."
-      }
-    },
-    "telegramErrorsChannelId": {
-      "type": "string",
-      "metadata": {
-        "description": "Telegram channel ID for error notifications."
-      }
-    },
     "pollingIntervalMs": {
       "type": "string",
       "defaultValue": "30000",
@@ -138,14 +122,6 @@
                 {
                   "name": "TELEGRAM_BOT_TOKEN",
                   "secureValue": "[parameters('telegramBotToken')]"
-                },
-                {
-                  "name": "TELEGRAM_LOG_CHANNEL_ID",
-                  "value": "[parameters('telegramLogChannelId')]"
-                },
-                {
-                  "name": "TELEGRAM_ERRORS_CHANNEL_ID",
-                  "value": "[parameters('telegramErrorsChannelId')]"
                 },
                 {
                   "name": "POLLING_INTERVAL_MS",
