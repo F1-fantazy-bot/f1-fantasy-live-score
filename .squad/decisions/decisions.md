@@ -228,6 +228,55 @@ Despite three wait strategy fixes, `waitForSelector('tbody tr')` was still timin
 
 ---
 
+## ADR-013: Persistent Browser Singleton (2026-03-27)
+
+**Author:** Prost  
+**Status:** APPLIED  
+**Affects:** `src/scraperService.js`, `src/pollingLoop.js`, `index.js`
+
+### Context
+Original design (ADR-011) specified launching a new browser per 30-second cycle. In practice, this wastes 2-4 seconds per cycle on Chromium startup (30 cycles/hour = 1-2 minutes wasted). Browser lifecycle management can be isolated to module load/unload without affecting scrape reliability.
+
+### Decision
+- **Replace ADR-011 decision:** Use module-level `browser` and `page` singleton that persists across cycles
+- **Launch browser once** via `initBrowser()` during pollingLoop startup
+- **Reuse browser** for every `scrapeLiveScoreData()` call
+- **Auto-recovery:** `ensureBrowser()` checks `browser.isConnected()` and `page.isClosed()` before each scrape; recreates page if needed without retry logic
+- **Graceful closure:** `closeBrowser()` idempotent, called from both `pollingLoop.stop()` and `index.js` SIGTERM handler
+
+### Key Design
+1. **Module singletons:** `browser` and `page` variables at module scope in scraperService.js
+2. **Lifecycle exports:** `initBrowser()`, `closeBrowser()`, `ensureBrowser()` functions exported
+3. **Page configuration extraction:** `configurePage()` helper for reuse when recreating pages after crashes
+4. **Async polling:** `startPolling()` now returns Promise (breaking change); must await before first cycle
+
+### Trade-offs
+- **Memory:** Single long-lived process instead of churn (positive)
+- **Reliability:** Potential stale data if page state corrupts (mitigated by ensureBrowser() checks)
+- **Breaking change:** Callers of startPolling() must now handle async
+
+### Rationale
+- Eliminates 1-2 minutes wasted per hour on startup overhead
+- Single process reduces memory churn and GC pressure
+- Auto-recovery maintains race-weekend reliability requirement
+- Idempotent closure ensures safe shutdown from multiple signal handlers
+
+### Impact
+- Performance: +5-10% throughput (less overhead per cycle)
+- Reliability: Unchanged (auto-recovery maintains same SLA)
+- Development: Test mocks for startPolling() must handle Promise
+
+---
+
+## User Directive: Branch-Based Review (2026-03-27)
+
+**By:** Doron (via Copilot)  
+**Status:** APPROVED
+
+Never commit directly to main branch. Always use a feature branch so Doron can review the PR before merging.
+
+---
+
 ## Decision Lineage
 
 | Decision | ADR | Author | Date | Status |

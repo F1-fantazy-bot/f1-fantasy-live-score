@@ -40,6 +40,7 @@ How to decide who handles what.
 ## Rules
 
 0. **Human gate — Doron approves before commit.** After agents finish changes, ask Doron to verify. Only commit when he confirms it works.
+0b. **Never commit to main.** Always create a feature branch so Doron can review via PR. Use `squad/{slug}` or `fix/{slug}` branch naming.
 1. **Eager by default**— spawn all agents who could usefully start work, including anticipatory downstream work.
 2. **Scribe always runs** after substantial work, always as `mode: "background"`. Never blocks.
 3. **Quick facts → coordinator answers directly.** Don't spawn an agent for "what port does the server run on?"
