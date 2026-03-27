@@ -53,3 +53,29 @@
 - All code passes ESLint and Prettier checks; Husky pre-commit hooks active
 - Integration point: Source code ready to be containerized by Dockerfile
 - Next phase: Docker image built; GitHub Actions workflows trigger on push/PR; Hunt begins testing
+
+### 2026-03-27 — ACI ARM Template for Live-Score
+
+**What was done:**
+
+- Created `infra/aci/azuredeploy.json` — ARM template for Azure Container Instances deployment
+- Created `infra/aci/azuredeploy.parameters.json` — Parameters file with Key Vault secret references
+
+**ARM template structure for ACI with Puppeteer:**
+- API version `2023-05-01`, Linux OS, single container in group
+- 2 GB memory (up from 1.5 in next-race-info) — Puppeteer/Chrome headless needs the headroom
+- CPU/memory passed as strings and converted via `json()` in the template (ARM pattern)
+- ACR image registry credentials section for pulling from f1fantasyacr.azurecr.io
+- Output: containerGroupResourceId
+
+**Key Vault secret reference pattern:**
+- Parameters file uses `reference` syntax pointing to `f1-fantasy-kv` vault
+- Three secrets pulled from KV: `acr-password`, `azure-storage-connection-string`, `telegram-bot-token`
+- Same Key Vault as next-race-info — shared infrastructure across the F1 Fantasy suite
+- Secure params use `secureString` type in template, `secureValue` in env vars
+
+**Environment variable mapping for live-score:**
+- 6 env vars total: AZURE_STORAGE_CONNECTION_STRING (secure), AZURE_STORAGE_CONTAINER_NAME, TELEGRAM_BOT_TOKEN (secure), TELEGRAM_LOG_CHANNEL_ID, TELEGRAM_ERRORS_CHANNEL_ID, POLLING_INTERVAL_MS
+- No OpenAI params (unlike next-race-info) — live-score is pure scraping, no AI
+- Telegram channel IDs left empty in params file — user fills per environment
+- Restart policy defaults to OnFailure (container restarts on crash but not on clean exit)
