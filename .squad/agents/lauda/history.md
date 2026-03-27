@@ -79,3 +79,55 @@
 - No OpenAI params (unlike next-race-info) — live-score is pure scraping, no AI
 - Telegram channel IDs left empty in params file — user fills per environment
 - Restart policy defaults to OnFailure (container restarts on crash but not on clean exit)
+
+### 2026-03-27 — Logic App: Polling-Based ACI Scheduler
+
+**What changed:**
+
+- Completely rewrote `infra/scheduler/azuredeploy.json` — replaced Delay Until approach with polling-based design
+- Parameters file (`azuredeploy.parameters.json`) unchanged — same parameter structure
+
+**Architecture change — Delay Until → Polling:**
+
+- **Old design:** Daily trigger at 00:00 UTC, three parallel branches with Delay Until actions that waited for exact session times, then started/stopped ACI sequentially per session. Problem: long-running workflow instances, fragile on failures.
+- **New design:** Polls every 30 minutes on Fri/Sat/Sun only. Each poll fetches Ergast API, calculates session windows, checks if current time falls within any window, then idempotently starts or stops ACI. Stateless — no long-running instances.
+
+**Trigger design:**
+
+- Weekly recurrence, interval 1, `weekDays: ["Friday", "Saturday", "Sunday", "Monday"]`
+- All 24 hours × 2 minutes (5, 35) = 48 polls per day, 192 per weekend+Monday
+- UTC timezone
+
+**Session window offsets (from session start time):**
+
+- Qualifying: -30min to +90min (1.5h from session start)
+- Sprint: -30min to +90min (1.5h from session start)
+- Race: -30min to +180min (3h from session start)
+
+**Expression patterns:**
+
+- `ticks()` conversion for reliable timestamp comparison (not string comparison)
+- `if(equals(..., null), false, ...)` null guards on all three window checks
+- Sprint has dual null guard: `or(race_object_null, sprint_field_null)`
+- `Current_Time` Compose action captures `utcNow()` once for consistency across all comparisons
+- `Should_Be_Running = or(quali, sprint, race)` → single condition → Start or Stop ACI
+
+**User preference noted:**
+
+- Doron prefers polling/idempotent approach over long-running Delay Until workflows
+- No auto-commit — Doron reviews before commit
+
+**Post-deployment requirement:**
+
+- Assign Contributor RBAC role to Logic App's managed identity principal on the ACI resource
+- Principal ID available in deployment output `logicAppPrincipalId`
+- Command: `az role assignment create --assignee <principalId> --role Contributor --scope <aciResourceId>`
+
+**Key design improvements over ADR-014:**
+
+1. **Stateless polling:** Each 30-minute cycle is independent (no long-running instance state)
+2. **Idempotent decisions:** Same poll result triggers no cascading effects
+3. **Cost efficiency:** 144 polls/weekend still within Logic App free tier
+4. **Reliability:** No fragile delay state management
+5. **Timestamp precision:** `ticks()` conversion prevents drift from string comparison
+6. **Robust null handling:** Dual null guard on Sprint field (only exists sprint weekends)
