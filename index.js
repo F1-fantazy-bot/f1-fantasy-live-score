@@ -5,6 +5,7 @@ require('dotenv').config();
 // Config validation runs on require — will throw if env vars are missing
 const config = require('./src/config');
 const { startPolling, stop } = require('./src/pollingLoop');
+const { closeBrowser } = require('./src/scraperService');
 const telegramService = require('./src/telegramService');
 
 let pollingHandle; // eslint-disable-line no-unused-vars
@@ -16,7 +17,7 @@ async function main() {
 
   await telegramService.notifyStartup();
 
-  pollingHandle = startPolling();
+  pollingHandle = await startPolling();
 }
 
 async function shutdown(signal) {
@@ -24,6 +25,7 @@ async function shutdown(signal) {
 
   try {
     await stop();
+    await closeBrowser();
     await telegramService.notifyShutdown();
   } catch (error) {
     console.error('Error during shutdown:', error.message);

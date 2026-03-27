@@ -1,6 +1,10 @@
 'use strict';
 
-const { scrapeLiveScoreData } = require('./scraperService');
+const {
+  initBrowser,
+  closeBrowser,
+  scrapeLiveScoreData,
+} = require('./scraperService');
 const { uploadLiveScore } = require('./azureBlobService');
 const telegramService = require('./telegramService');
 const config = require('./config');
@@ -13,6 +17,7 @@ const ESCALATION_THRESHOLD = 5;
 
 /**
  * Execute a single scrape → validate → upload cycle.
+ * Uses the persistent browser managed by scraperService.
  */
 async function executeCycle() {
   if (cycleRunning) {
@@ -72,14 +77,16 @@ async function executeCycle() {
 }
 
 /**
- * Start the polling loop. Runs one immediate cycle, then schedules
- * subsequent cycles at the configured interval.
- * @returns {{ stop: () => Promise<void> }} Handle to stop the loop gracefully.
+ * Start the polling loop. Launches the persistent browser, runs one
+ * immediate cycle, then schedules subsequent cycles at the configured interval.
+ * @returns {Promise<{ stop: () => Promise<void> }>} Handle to stop the loop gracefully.
  */
-function startPolling() {
+async function startPolling() {
   console.log(
     `Starting polling loop (interval: ${config.polling.intervalMs}ms)`,
   );
+
+  await initBrowser();
 
   // Run first cycle immediately
   executeCycle();
@@ -91,16 +98,16 @@ function startPolling() {
 
 /**
  * Gracefully stop the polling loop.
- * Clears the interval and waits for any in-flight cycle to finish.
+ * Clears the interval, waits for any in-flight cycle, then closes the browser.
  */
-function stop() {
-  return new Promise((resolve) => {
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = null;
-    }
+async function stop() {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
 
-    // Wait for current cycle to finish
+  // Wait for current cycle to finish
+  await new Promise((resolve) => {
     const waitForCycle = () => {
       if (!cycleRunning) {
         resolve();
@@ -111,6 +118,8 @@ function stop() {
 
     waitForCycle();
   });
+
+  await closeBrowser();
 }
 
 module.exports = { startPolling, stop };
