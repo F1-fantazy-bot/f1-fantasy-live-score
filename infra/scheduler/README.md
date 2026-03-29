@@ -64,22 +64,22 @@ Polls every 30 minutes on **Fri/Sat/Sun/Mon** and idempotently starts or stops t
 
 Each session defines a window during which the ACI should be running:
 
-| Session    | Window Start         | Window End                    | Notes                          |
-|------------|----------------------|-------------------------------|--------------------------------|
-| Qualifying | `quali_time - 30min` | `quali_time + 90min`          | 1.5h total from session start  |
-| Sprint     | `sprint_time - 30min`| `sprint_time + 90min`         | 1.5h total from session start  |
-| Race       | `race_time - 30min`  | `race_time + 180min`          | 3h total from session start    |
+| Session    | Window Start          | Window End            | Notes                         |
+| ---------- | --------------------- | --------------------- | ----------------------------- |
+| Qualifying | `quali_time - 30min`  | `quali_time + 90min`  | 1.5h total from session start |
+| Sprint     | `sprint_time - 30min` | `sprint_time + 90min` | 1.5h total from session start |
+| Race       | `race_time - 30min`   | `race_time + 180min`  | 3h total from session start   |
 
 - **Sprint** is only evaluated if the API response contains a `Sprint` field (sprint weekends only).
 - All times are **UTC**.
 
 ## Example — Miami GP 2026 (Sprint Weekend)
 
-| Session    | Start (UTC) | ACI Start    | ACI Stop     |
-|------------|-------------|--------------|--------------|
-| Qualifying | Sat 20:00   | Sat 19:30    | Sat 21:30    |
-| Sprint     | Sat 16:00   | Sat 15:30    | Sat 17:30    |
-| Race       | Sun 20:00   | Sun 19:30    | Sun 23:00    |
+| Session    | Start (UTC) | ACI Start | ACI Stop  |
+| ---------- | ----------- | --------- | --------- |
+| Qualifying | Sat 20:00   | Sat 19:30 | Sat 21:30 |
+| Sprint     | Sat 16:00   | Sat 15:30 | Sat 17:30 |
+| Race       | Sun 20:00   | Sun 19:30 | Sun 23:00 |
 
 ## Key Design Decisions
 
@@ -97,6 +97,7 @@ az deployment group create \
 ```
 
 **Post-deploy — assign RBAC:**
+
 ```bash
 az role assignment create \
   --assignee <logicAppPrincipalId> \

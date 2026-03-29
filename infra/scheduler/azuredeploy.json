@@ -61,20 +61,12 @@
                 "frequency": "Week",
                 "interval": 1,
                 "schedule": {
-                  "weekDays": [
-                    "Friday",
-                    "Saturday",
-                    "Sunday",
-                    "Monday"
-                  ],
+                  "weekDays": ["Friday", "Saturday", "Sunday", "Monday"],
                   "hours": [
-                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-                    12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
+                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+                    17, 18, 19, 20, 21, 22, 23
                   ],
-                  "minutes": [
-                    5,
-                    35
-                  ]
+                  "minutes": [5, 35]
                 },
                 "timeZone": "UTC"
               }
@@ -98,60 +90,40 @@
               "type": "Compose",
               "inputs": "@body('Fetch_Race_Schedule')?['MRData']?['RaceTable']?['Races']?[0]",
               "runAfter": {
-                "Fetch_Race_Schedule": [
-                  "Succeeded"
-                ]
+                "Fetch_Race_Schedule": ["Succeeded"]
               }
             },
             "Is_Quali_Window_Active": {
               "type": "Compose",
               "inputs": "@if(equals(outputs('Get_Race_Object'), null), false, and(greaterOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['Qualifying']?['date'], 'T', outputs('Get_Race_Object')?['Qualifying']?['time']), -30))), lessOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['Qualifying']?['date'], 'T', outputs('Get_Race_Object')?['Qualifying']?['time']), 90)))))",
               "runAfter": {
-                "Get_Race_Object": [
-                  "Succeeded"
-                ],
-                "Current_Time": [
-                  "Succeeded"
-                ]
+                "Get_Race_Object": ["Succeeded"],
+                "Current_Time": ["Succeeded"]
               }
             },
             "Is_Sprint_Window_Active": {
               "type": "Compose",
               "inputs": "@if(or(equals(outputs('Get_Race_Object'), null), equals(outputs('Get_Race_Object')?['Sprint'], null)), false, and(greaterOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['Sprint']?['date'], 'T', outputs('Get_Race_Object')?['Sprint']?['time']), -30))), lessOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['Sprint']?['date'], 'T', outputs('Get_Race_Object')?['Sprint']?['time']), 90)))))",
               "runAfter": {
-                "Get_Race_Object": [
-                  "Succeeded"
-                ],
-                "Current_Time": [
-                  "Succeeded"
-                ]
+                "Get_Race_Object": ["Succeeded"],
+                "Current_Time": ["Succeeded"]
               }
             },
             "Is_Race_Window_Active": {
               "type": "Compose",
               "inputs": "@if(equals(outputs('Get_Race_Object'), null), false, and(greaterOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['date'], 'T', outputs('Get_Race_Object')?['time']), -30))), lessOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['date'], 'T', outputs('Get_Race_Object')?['time']), 180)))))",
               "runAfter": {
-                "Get_Race_Object": [
-                  "Succeeded"
-                ],
-                "Current_Time": [
-                  "Succeeded"
-                ]
+                "Get_Race_Object": ["Succeeded"],
+                "Current_Time": ["Succeeded"]
               }
             },
             "Should_Be_Running": {
               "type": "Compose",
               "inputs": "@or(outputs('Is_Quali_Window_Active'), outputs('Is_Sprint_Window_Active'), outputs('Is_Race_Window_Active'))",
               "runAfter": {
-                "Is_Quali_Window_Active": [
-                  "Succeeded"
-                ],
-                "Is_Sprint_Window_Active": [
-                  "Succeeded"
-                ],
-                "Is_Race_Window_Active": [
-                  "Succeeded"
-                ]
+                "Is_Quali_Window_Active": ["Succeeded"],
+                "Is_Sprint_Window_Active": ["Succeeded"],
+                "Is_Race_Window_Active": ["Succeeded"]
               }
             },
             "Check_ACI_State": {
@@ -159,10 +131,7 @@
               "expression": {
                 "and": [
                   {
-                    "equals": [
-                      "@outputs('Should_Be_Running')",
-                      true
-                    ]
+                    "equals": ["@outputs('Should_Be_Running')", true]
                   }
                 ]
               },
@@ -197,9 +166,7 @@
                 }
               },
               "runAfter": {
-                "Should_Be_Running": [
-                  "Succeeded"
-                ]
+                "Should_Be_Running": ["Succeeded"]
               }
             }
           }
