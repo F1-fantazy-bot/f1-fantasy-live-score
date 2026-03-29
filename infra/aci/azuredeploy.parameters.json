@@ -15,7 +15,7 @@
       "value": "1"
     },
     "memoryInGb": {
-      "value": "2"
+      "value": "1"
     },
     "restartPolicy": {
       "value": "OnFailure"

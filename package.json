@@ -8,7 +8,15 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "start": "node index.js",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "aci:remove": "az container delete --resource-group f1-fantazy-bot --name f1-fantasy-live-score-aci",
+    "aci:deploy": "az deployment group create --resource-group f1-fantazy-bot --template-file infra/aci/azuredeploy.json --parameters @infra/aci/azuredeploy.parameters.json",
+    "aci:start": "az container start --resource-group f1-fantazy-bot --name f1-fantasy-live-score-aci",
+    "aci:stop": "az container stop --resource-group f1-fantazy-bot --name f1-fantasy-live-score-aci",
+    "aci:status": "az container show --resource-group f1-fantazy-bot --name f1-fantasy-live-score-aci --query \"{ProvisioningState:provisioningState, State:containers[0].instanceView.currentState.state, IP:ipAddress.ip, FQDN:ipAddress.fqdn}\" --output table",
+    "aci:logs": "az container logs --resource-group f1-fantazy-bot --name f1-fantasy-live-score-aci",
+    "aci:logs:live": "az container logs --resource-group f1-fantazy-bot --name f1-fantasy-live-score-aci --follow",
+    "aci:events": "az container show --resource-group f1-fantazy-bot --name f1-fantasy-live-score-aci --query \"containers[0].instanceView.events\" --output table"
   },
   "author": "",
   "license": "MIT",
