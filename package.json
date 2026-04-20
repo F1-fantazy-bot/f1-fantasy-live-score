@@ -16,7 +16,11 @@
     "aci:status": "az container show --resource-group f1-fantazy-bot --name f1-fantasy-live-score-aci --query \"{ProvisioningState:provisioningState, State:containers[0].instanceView.currentState.state, IP:ipAddress.ip, FQDN:ipAddress.fqdn}\" --output table",
     "aci:logs": "az container logs --resource-group f1-fantazy-bot --name f1-fantasy-live-score-aci",
     "aci:logs:live": "az container logs --resource-group f1-fantazy-bot --name f1-fantasy-live-score-aci --follow",
-    "aci:events": "az container show --resource-group f1-fantazy-bot --name f1-fantasy-live-score-aci --query \"containers[0].instanceView.events\" --output table"
+    "aci:events": "az container show --resource-group f1-fantazy-bot --name f1-fantasy-live-score-aci --query \"containers[0].instanceView.events\" --output table",
+    "deploy:aci": "az deployment group create --resource-group f1-fantazy-bot --name \"live-score-aci-${DEPLOYMENT_SUFFIX:-manual-$(date +%s)}\" --template-file infra/aci/azuredeploy.json --parameters @infra/aci/azuredeploy.parameters.json --output none --only-show-errors",
+    "deploy:scheduler": "az deployment group create --resource-group f1-fantazy-bot --name \"live-score-scheduler-${DEPLOYMENT_SUFFIX:-manual-$(date +%s)}\" --template-file infra/scheduler/azuredeploy.json --parameters @infra/scheduler/azuredeploy.parameters.json --output none --only-show-errors",
+    "deploy:grant-runner-msi": "bash scripts/grant-runner-msi.sh",
+    "deploy:logicapps": "npm run deploy:scheduler && npm run deploy:grant-runner-msi"
   },
   "author": "",
   "license": "MIT",
