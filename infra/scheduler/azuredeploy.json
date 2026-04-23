@@ -34,6 +34,12 @@
       "metadata": {
         "description": "Name of the ACI container group to start/stop."
       }
+    },
+    "telegramBotToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Telegram bot token used to post Logic App failure notifications."
+      }
     }
   },
   "variables": {
@@ -73,100 +79,136 @@
             }
           },
           "actions": {
-            "Current_Time": {
-              "type": "Compose",
-              "inputs": "@utcNow()",
-              "runAfter": {}
-            },
-            "Fetch_Race_Schedule": {
-              "type": "Http",
-              "inputs": {
-                "method": "GET",
-                "uri": "https://api.jolpi.ca/ergast/f1/current/next.json"
-              },
-              "runAfter": {}
-            },
-            "Get_Race_Object": {
-              "type": "Compose",
-              "inputs": "@body('Fetch_Race_Schedule')?['MRData']?['RaceTable']?['Races']?[0]",
-              "runAfter": {
-                "Fetch_Race_Schedule": ["Succeeded"]
-              }
-            },
-            "Is_Quali_Window_Active": {
-              "type": "Compose",
-              "inputs": "@if(equals(outputs('Get_Race_Object'), null), false, and(greaterOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['Qualifying']?['date'], 'T', outputs('Get_Race_Object')?['Qualifying']?['time']), -30))), lessOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['Qualifying']?['date'], 'T', outputs('Get_Race_Object')?['Qualifying']?['time']), 90)))))",
-              "runAfter": {
-                "Get_Race_Object": ["Succeeded"],
-                "Current_Time": ["Succeeded"]
-              }
-            },
-            "Is_Sprint_Window_Active": {
-              "type": "Compose",
-              "inputs": "@if(or(equals(outputs('Get_Race_Object'), null), equals(outputs('Get_Race_Object')?['Sprint'], null)), false, and(greaterOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['Sprint']?['date'], 'T', outputs('Get_Race_Object')?['Sprint']?['time']), -30))), lessOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['Sprint']?['date'], 'T', outputs('Get_Race_Object')?['Sprint']?['time']), 90)))))",
-              "runAfter": {
-                "Get_Race_Object": ["Succeeded"],
-                "Current_Time": ["Succeeded"]
-              }
-            },
-            "Is_Race_Window_Active": {
-              "type": "Compose",
-              "inputs": "@if(equals(outputs('Get_Race_Object'), null), false, and(greaterOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['date'], 'T', outputs('Get_Race_Object')?['time']), -30))), lessOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['date'], 'T', outputs('Get_Race_Object')?['time']), 180)))))",
-              "runAfter": {
-                "Get_Race_Object": ["Succeeded"],
-                "Current_Time": ["Succeeded"]
-              }
-            },
-            "Should_Be_Running": {
-              "type": "Compose",
-              "inputs": "@or(outputs('Is_Quali_Window_Active'), outputs('Is_Sprint_Window_Active'), outputs('Is_Race_Window_Active'))",
-              "runAfter": {
-                "Is_Quali_Window_Active": ["Succeeded"],
-                "Is_Sprint_Window_Active": ["Succeeded"],
-                "Is_Race_Window_Active": ["Succeeded"]
-              }
-            },
-            "Check_ACI_State": {
-              "type": "If",
-              "expression": {
-                "and": [
-                  {
-                    "equals": ["@outputs('Should_Be_Running')", true]
-                  }
-                ]
-              },
+            "Try": {
+              "type": "Scope",
               "actions": {
-                "Start_ACI": {
+                "Current_Time": {
+                  "type": "Compose",
+                  "inputs": "@utcNow()",
+                  "runAfter": {}
+                },
+                "Fetch_Race_Schedule": {
                   "type": "Http",
                   "inputs": {
-                    "method": "POST",
-                    "uri": "[variables('aciStartUri')]",
-                    "authentication": {
-                      "type": "ManagedServiceIdentity",
-                      "audience": "https://management.azure.com/"
-                    }
+                    "method": "GET",
+                    "uri": "https://api.jolpi.ca/ergast/f1/current/next.json"
                   },
                   "runAfter": {}
-                }
-              },
-              "else": {
-                "actions": {
-                  "Stop_ACI": {
-                    "type": "Http",
-                    "inputs": {
-                      "method": "POST",
-                      "uri": "[variables('aciStopUri')]",
-                      "authentication": {
-                        "type": "ManagedServiceIdentity",
-                        "audience": "https://management.azure.com/"
+                },
+                "Get_Race_Object": {
+                  "type": "Compose",
+                  "inputs": "@body('Fetch_Race_Schedule')?['MRData']?['RaceTable']?['Races']?[0]",
+                  "runAfter": {
+                    "Fetch_Race_Schedule": ["Succeeded"]
+                  }
+                },
+                "Is_Quali_Window_Active": {
+                  "type": "Compose",
+                  "inputs": "@if(equals(outputs('Get_Race_Object'), null), false, and(greaterOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['Qualifying']?['date'], 'T', outputs('Get_Race_Object')?['Qualifying']?['time']), -30))), lessOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['Qualifying']?['date'], 'T', outputs('Get_Race_Object')?['Qualifying']?['time']), 90)))))",
+                  "runAfter": {
+                    "Get_Race_Object": ["Succeeded"],
+                    "Current_Time": ["Succeeded"]
+                  }
+                },
+                "Is_Sprint_Window_Active": {
+                  "type": "Compose",
+                  "inputs": "@if(or(equals(outputs('Get_Race_Object'), null), equals(outputs('Get_Race_Object')?['Sprint'], null)), false, and(greaterOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['Sprint']?['date'], 'T', outputs('Get_Race_Object')?['Sprint']?['time']), -30))), lessOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['Sprint']?['date'], 'T', outputs('Get_Race_Object')?['Sprint']?['time']), 90)))))",
+                  "runAfter": {
+                    "Get_Race_Object": ["Succeeded"],
+                    "Current_Time": ["Succeeded"]
+                  }
+                },
+                "Is_Race_Window_Active": {
+                  "type": "Compose",
+                  "inputs": "@if(equals(outputs('Get_Race_Object'), null), false, and(greaterOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['date'], 'T', outputs('Get_Race_Object')?['time']), -30))), lessOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['date'], 'T', outputs('Get_Race_Object')?['time']), 180)))))",
+                  "runAfter": {
+                    "Get_Race_Object": ["Succeeded"],
+                    "Current_Time": ["Succeeded"]
+                  }
+                },
+                "Should_Be_Running": {
+                  "type": "Compose",
+                  "inputs": "@or(outputs('Is_Quali_Window_Active'), outputs('Is_Sprint_Window_Active'), outputs('Is_Race_Window_Active'))",
+                  "runAfter": {
+                    "Is_Quali_Window_Active": ["Succeeded"],
+                    "Is_Sprint_Window_Active": ["Succeeded"],
+                    "Is_Race_Window_Active": ["Succeeded"]
+                  }
+                },
+                "Check_ACI_State": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": ["@outputs('Should_Be_Running')", true]
                       }
-                    },
-                    "runAfter": {}
+                    ]
+                  },
+                  "actions": {
+                    "Start_ACI": {
+                      "type": "Http",
+                      "inputs": {
+                        "method": "POST",
+                        "uri": "[variables('aciStartUri')]",
+                        "authentication": {
+                          "type": "ManagedServiceIdentity",
+                          "audience": "https://management.azure.com/"
+                        }
+                      },
+                      "runAfter": {}
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "Stop_ACI": {
+                        "type": "Http",
+                        "inputs": {
+                          "method": "POST",
+                          "uri": "[variables('aciStopUri')]",
+                          "authentication": {
+                            "type": "ManagedServiceIdentity",
+                            "audience": "https://management.azure.com/"
+                          }
+                        },
+                        "runAfter": {}
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Should_Be_Running": ["Succeeded"]
                   }
                 }
               },
+              "runAfter": {}
+            },
+            "Notify_Log_Channel_On_Failure": {
+              "type": "Http",
+              "inputs": {
+                "method": "POST",
+                "uri": "[concat('https://api.telegram.org/bot', parameters('telegramBotToken'), '/sendMessage')]",
+                "headers": { "Content-Type": "application/json" },
+                "body": {
+                  "chat_id": -1002298860617,
+                  "text": "@{concat('🚨 Logic App ', workflow().name, ' failed\n\nRun: ', workflow().run.name, '\nTime (UTC): ', utcNow(), '\n\nFailed actions:\n', take(string(filter(result('Try'), equals(item()?['status'], 'Failed'))), 3500))}"
+                }
+              },
               "runAfter": {
-                "Should_Be_Running": ["Succeeded"]
+                "Try": ["Failed", "TimedOut"]
+              }
+            },
+            "Notify_Errors_Channel_On_Failure": {
+              "type": "Http",
+              "inputs": {
+                "method": "POST",
+                "uri": "[concat('https://api.telegram.org/bot', parameters('telegramBotToken'), '/sendMessage')]",
+                "headers": { "Content-Type": "application/json" },
+                "body": {
+                  "chat_id": -5167373779,
+                  "text": "@{concat('🚨 Logic App ', workflow().name, ' failed\n\nRun: ', workflow().run.name, '\nTime (UTC): ', utcNow(), '\n\nFailed actions:\n', take(string(filter(result('Try'), equals(item()?['status'], 'Failed'))), 3500))}"
+                }
+              },
+              "runAfter": {
+                "Try": ["Failed", "TimedOut"]
               }
             }
           }
