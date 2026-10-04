@@ -123,7 +123,7 @@
                 },
                 "Is_Race_Window_Active": {
                   "type": "Compose",
-                  "inputs": "@if(equals(outputs('Get_Race_Object'), null), false, and(greaterOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['date'], 'T', outputs('Get_Race_Object')?['time']), -30))), lessOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['date'], 'T', outputs('Get_Race_Object')?['time']), 180)))))",
+                  "inputs": "@if(equals(outputs('Get_Race_Object'), null), false, and(greaterOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['date'], 'T', outputs('Get_Race_Object')?['time']), -30))), lessOrEquals(ticks(outputs('Current_Time')), ticks(addMinutes(concat(outputs('Get_Race_Object')?['date'], 'T', outputs('Get_Race_Object')?['time']), 240)))))",
                   "runAfter": {
                     "Get_Race_Object": ["Succeeded"],
                     "Current_Time": ["Succeeded"]
@@ -230,8 +230,16 @@
                 }
               },
               "runAfter": {
-                "Notify_Log_Channel_On_Failure": ["Succeeded", "Failed", "TimedOut"],
-                "Notify_Errors_Channel_On_Failure": ["Succeeded", "Failed", "TimedOut"]
+                "Notify_Log_Channel_On_Failure": [
+                  "Succeeded",
+                  "Failed",
+                  "TimedOut"
+                ],
+                "Notify_Errors_Channel_On_Failure": [
+                  "Succeeded",
+                  "Failed",
+                  "TimedOut"
+                ]
               }
             }
           }
