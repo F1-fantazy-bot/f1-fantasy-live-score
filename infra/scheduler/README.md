@@ -4,60 +4,14 @@ Polls every 30 minutes on **Fri/Sat/Sun/Mon** and idempotently starts or stops t
 
 ## Flow
 
-```
-┌─────────────────────────────────────┐
-│  ⏰ Recurrence Trigger              │
-│  Every 30 min (Fri/Sat/Sun/Mon)     │
-└──────────────┬──────────────────────┘
-               │
-       ┌───────┴───────┐
-       │               │
-       ▼               ▼
-┌─────────────┐  ┌──────────────┐
-│ Current_Time│  │ Fetch_Race_  │
-│  utcNow()   │  │ Schedule     │
-└──────┬──────┘  │ GET /ergast/ │
-       │         │ f1/current/  │
-       │         │ next.json    │
-       │         └──────┬───────┘
-       │                │
-       │                ▼
-       │         ┌──────────────┐
-       │         │ Get_Race_    │
-       │         │ Object       │
-       │         │ Races[0]     │
-       │         └──────┬───────┘
-       │                │
-       └───────┬────────┘
-               │
-     ┌─────────┼─────────────┐
-     │         │             │
-     ▼         ▼             ▼
-┌─────────┐ ┌──────────┐ ┌─────────┐
-│ Is_Quali│ │ Is_Sprint│ │ Is_Race │
-│ Window  │ │ Window   │ │ Window  │
-│ Active? │ │ Active?  │ │ Active? │
-└────┬────┘ └────┬─────┘ └────┬────┘
-     │           │             │
-     └─────┬─────┘             │
-           └──────┬────────────┘
-                  │
-                  ▼
-        ┌─────────────────┐
-        │ Should_Be_      │
-        │ Running          │
-        │ = Q OR S OR R   │
-        └────────┬────────┘
-                 │
-          ┌──────┴──────┐
-          │             │
-       true          false
-          │             │
-          ▼             ▼
-   ┌────────────┐ ┌────────────┐
-   │ Start ACI  │ │ Stop ACI   │
-   │ POST /start│ │ POST /stop │
-   └────────────┘ └────────────┘
+```mermaid
+flowchart TD
+    Pulse[Poll every 30 minutes on Fri–Mon UTC] --> Calendar[Read and validate the cached season calendar]
+    Calendar -->|Valid| Windows[Check qualifying, sprint, and race windows across all rounds]
+    Calendar -->|Unavailable or invalid| Alert[Alert and leave the ACI in its current state]
+    Windows -->|A window is active| Start[Start ACI]
+    Windows -->|No window is active| Stop[Stop ACI]
+    Windows -->|Missing data makes the decision indeterminate| Alert
 ```
 
 ## Session Time Windows
@@ -70,7 +24,7 @@ Each session defines a window during which the ACI should be running:
 | Sprint     | `sprint_time - 30min` | `sprint_time + 90min` | 1.5h total from session start |
 | Race       | `race_time - 30min`   | `race_time + 240min`  | 4h after session start        |
 
-- **Sprint** is only evaluated if the API response contains a `Sprint` field (sprint weekends only).
+- Sprint windows apply on sprint weekends.
 - All times are **UTC**.
 
 ## Example — Miami GP 2026 (Sprint Weekend)
@@ -96,7 +50,7 @@ az deployment group create \
   --parameters azuredeploy.parameters.json
 ```
 
-**Post-deploy — assign RBAC:**
+The template assigns the container-scoped Blob Data Reader role. Assign ACI access separately for a new scheduler identity.
 
 ```bash
 az role assignment create \
@@ -107,4 +61,8 @@ az role assignment create \
 
 ## Data Source
 
-Race schedule fetched from: `https://api.jolpi.ca/ergast/f1/current/next.json`
+The scheduler reads `jolpica/calendar.json` with its system-assigned identity.
+The deployment grants Storage Blob Data Reader on the existing blob container.
+It checks every round and leaves the ACI in its current state if reading or
+validating the calendar fails, or a missing session time makes the decision
+indeterminate.
