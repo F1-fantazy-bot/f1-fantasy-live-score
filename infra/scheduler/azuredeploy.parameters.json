@@ -24,6 +24,9 @@
         },
         "secretName": "telegram-bot-token"
       }
+    },
+    "calendarStorageAccountName": {
+      "value": "f1fantazybot9eca"
     }
   }
 }
