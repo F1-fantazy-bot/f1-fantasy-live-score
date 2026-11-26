@@ -50,7 +50,11 @@ az deployment group create \
   --parameters azuredeploy.parameters.json
 ```
 
-The template assigns the container-scoped Blob Data Reader role. Assign ACI access separately for a new scheduler identity.
+Routine deployments reuse the scheduler’s existing Blob Data Reader grant.
+For a new scheduler identity, run the deployment above once with
+`grantCalendarReader=true` appended to the `--parameters` line, using an Azure
+identity that can assign roles on the blob container. Assign ACI access
+separately.
 
 ```bash
 az role assignment create \
